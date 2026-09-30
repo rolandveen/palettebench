@@ -24,7 +24,7 @@ Initial public release.
 - Report pair-matching coverage relative to both baseline and candidate palettes.
 - Refuse non-empty output directories to prevent stale artifacts from mixed runs.
 - Document population standard deviation and the percentile interpolation convention.
-- Enforce static type checks and at least 90% statement coverage in continuous integration.
+- Separate static quality checks, the Python 3.11–3.13 runtime-test matrix, and package smoke testing in continuous integration; enforce at least 90% statement coverage.
 - Expand CIEDE2000 validation to the complete 34-pair Sharma reference dataset.
 - Document non-obvious scientific conventions, comparison tolerances, coverage denominators, and figure geometry directly in the implementation.
 
@@ -32,3 +32,4 @@ Initial public release.
 
 - Only label genuinely positive or negative matched-pair changes as increases or decreases.
 - Require `allow_duplicate_colours` to be a YAML boolean and validate analysis/render settings.
+- Run MyPy in the Python 3.11 quality job so newer NumPy stub syntax in the Python 3.13 runtime environment does not invalidate the minimum-version type-check target.
