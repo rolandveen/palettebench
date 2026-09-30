@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from palettebench import analyse_palette, load_palette
 from palettebench.analysis import AnalysisConfig
@@ -21,7 +22,10 @@ def test_standard_outputs(tmp_path):
     ]
     for relative in expected:
         assert (output / relative).is_file()
-    assert len(json.loads((output / "metadata.json").read_text())["input_sha256"]) == 64
+    metadata = json.loads((output / "metadata.json").read_text())
+    assert len(metadata["input_sha256"]) == 64
+    assert metadata["input_palette"] == "okabe-ito.yaml"
+    assert not Path(metadata["input_palette"]).is_absolute()
 
 
 def test_comparison_outputs(tmp_path):

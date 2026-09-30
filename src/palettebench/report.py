@@ -40,7 +40,7 @@ def _copy_inputs(palettes: list[Palette], output: Path) -> list[dict[str, str]]:
         records.append(
             {
                 "name": palette.name,
-                "original_path": str(palette.path),
+                "original_path": palette.path.name,
                 "copied_file": f"inputs/{copied_name}",
                 "sha256": digest,
             }

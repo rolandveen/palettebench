@@ -63,6 +63,8 @@ palettebench palettes/okabe-ito.yaml
 
 The report is written to `reports/okabe-ito/`. Open `report.md` in a Markdown viewer or repository browser. The report directory also contains exact input, data, tables, figures, and provenance.
 
+The repository includes a [complete generated baseline audit](../examples/okabe-ito-report/report.md) showing the expected directory and every default artifact.
+
 Equivalent module invocation:
 
 ```bash

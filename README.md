@@ -8,6 +8,8 @@ Start with the [User manual](docs/manual.md). The complete scientific assumption
 
 ![Example PaletteBench palette strip](docs/example-palette.svg)
 
+A [complete generated Okabe–Ito audit](examples/okabe-ito-report/report.md) is included for inspection without installing the package.
+
 ## Installation
 
 Python 3.11 or newer is required.

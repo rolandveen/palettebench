@@ -1,0 +1,14 @@
+condition,kind,severity,label
+normal,normal,0,Normal
+protan20,protan,20,Protan 20%
+protan40,protan,40,Protan 40%
+protan60,protan,60,Protan 60%
+protan80,protan,80,Protan 80%
+protan100,protan,100,Protan 100%
+deutan20,deutan,20,Deutan 20%
+deutan40,deutan,40,Deutan 40%
+deutan60,deutan,60,Deutan 60%
+deutan80,deutan,80,Deutan 80%
+deutan100,deutan,100,Deutan 100%
+tritan100,tritan,100,Tritan 100%
+grayscale,grayscale,0,Grayscale
