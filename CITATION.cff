@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use PaletteBench, please cite this software."
+title: "PaletteBench"
+type: software
+authors:
+  - family-names: Veen
+    given-names: Roland J.
+version: 0.1.0
+date-released: 2026-09-30
+license: BSD-3-Clause
+repository-code: "https://github.com/rolandveen/palettebench"

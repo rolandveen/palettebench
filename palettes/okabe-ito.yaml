@@ -1,0 +1,19 @@
+name: Okabe-Ito
+description: >
+  Eight-colour categorical palette presented by Masataka Okabe and Kei Ito as
+  part of their Color Universal Design guidance and later popularised in
+  scientific publishing by Bang Wong.
+source:
+  authors: [Masataka Okabe, Kei Ito]
+  url: https://jfly.uni-koeln.de/color/
+  note: Canonical eight-colour sRGB values; see README references.
+colors:
+  - {id: orange, name: Orange, hex: "#E69F00"}
+  - {id: sky_blue, name: Sky blue, hex: "#56B4E9"}
+  - {id: bluish_green, name: Bluish green, hex: "#009E73"}
+  - {id: yellow, name: Yellow, hex: "#F0E442"}
+  - {id: blue, name: Blue, hex: "#0072B2"}
+  - {id: vermillion, name: Vermillion, hex: "#D55E00"}
+  - {id: reddish_purple, name: Reddish purple, hex: "#CC79A7"}
+  - {id: black, name: Black, hex: "#000000"}
+

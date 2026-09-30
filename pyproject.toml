@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "palettebench"
+version = "0.1.0"
+description = "Reproducible perceptual and colour-vision-deficiency audits for scientific palettes"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "BSD-3-Clause"
+authors = [{name = "Roland J. Veen"}]
+dependencies = [
+  "numpy>=1.26",
+  "matplotlib>=3.8",
+  "PyYAML>=6.0",
+  "colorspacious>=1.1.2",
+  "colour-science>=0.4.4",
+  "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+palettebench = "palettebench.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
