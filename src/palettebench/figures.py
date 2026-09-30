@@ -7,6 +7,9 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+matplotlib.rcParams.update(
+    {"svg.fonttype": "none", "svg.hashsalt": "palettebench", "pdf.fonttype": 42}
+)
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import Normalize
@@ -15,13 +18,22 @@ from matplotlib.patches import Polygon, Rectangle
 from .analysis import AnalysisResult, ConditionResult
 
 
-def _save(fig: plt.Figure, directory: Path, stem: str, formats: tuple[str, ...], dpi: int) -> None:
+def save_figure(
+    fig: plt.Figure, directory: Path, stem: str, formats: tuple[str, ...], dpi: int
+) -> None:
     for extension in formats:
+        metadata: dict[str, object] = {}
+        if extension == "svg":
+            metadata.update({"Creator": None, "Date": None})
+        elif extension == "pdf":
+            metadata.update({"Creator": "PaletteBench", "CreationDate": None, "ModDate": None})
+        elif extension == "png":
+            metadata["Software"] = "PaletteBench"
         fig.savefig(
             directory / f"{stem}.{extension}",
             dpi=dpi if extension == "png" else None,
             bbox_inches="tight",
-            metadata={"Creator": "palettebench"},
+            metadata=metadata,
         )
     plt.close(fig)
 
@@ -191,8 +203,13 @@ def weakest_pairs(result: AnalysisResult) -> plt.Figure:
     ]
     count = min(result.config.weakest_count, len(result.colours) * (len(result.colours) - 1) // 2)
     fig, axes = plt.subplots(
-        len(shown), count, figsize=(count * 2.1, len(shown) * 1.55), squeeze=False
+        len(shown),
+        count,
+        figsize=(count * 2.15, len(shown) * 2.25),
+        squeeze=False,
+        layout="constrained",
     )
+    original = _condition(result, "normal")
     id_to_index = {c.id: i for i, c in enumerate(result.colours)}
     for row, condition in enumerate(shown):
         pairs = sorted(
@@ -201,9 +218,18 @@ def weakest_pairs(result: AnalysisResult) -> plt.Figure:
         for column, pair in enumerate(pairs):
             ax = axes[row, column]
             a, b = id_to_index[pair.colour1], id_to_index[pair.colour2]
-            ax.add_patch(Rectangle((0, 0), 0.5, 1, color=condition.srgb[a]))
-            ax.add_patch(Rectangle((0.5, 0), 0.5, 1, color=condition.srgb[b]))
-            ax.set_title(f"{pair.colour1} / {pair.colour2}\nΔE00 {pair.delta_e_00:.1f}", fontsize=7)
+            ax.add_patch(Rectangle((0, 0.52), 0.5, 0.48, color=original.srgb[a]))
+            ax.add_patch(Rectangle((0.5, 0.52), 0.5, 0.48, color=original.srgb[b]))
+            ax.add_patch(Rectangle((0, 0), 0.5, 0.48, color=condition.srgb[a]))
+            ax.add_patch(Rectangle((0.5, 0), 0.5, 0.48, color=condition.srgb[b]))
+            ax.axhline(0.5, color="white", linewidth=1)
+            ax.set_title(
+                f"{result.colours[a].name} / {result.colours[b].name}\nΔE00 {pair.delta_e_00:.1f}",
+                fontsize=7,
+            )
+            if column == 0:
+                ax.text(0.02, 0.76, "Original", transform=ax.transAxes, fontsize=6, va="center")
+                ax.text(0.02, 0.24, "Simulated", transform=ax.transAxes, fontsize=6, va="center")
             ax.axis("off")
         axes[row, 0].text(
             -0.08,
@@ -215,7 +241,7 @@ def weakest_pairs(result: AnalysisResult) -> plt.Figure:
             va="center",
             fontsize=8,
         )
-    fig.suptitle("Weakest simulated pairs", y=1.01)
+    fig.suptitle("Weakest simulated pairs")
     return fig
 
 
@@ -259,14 +285,22 @@ def write_figures(
     ]
     vmax = max(float(c.delta_e.max()) for c in major)
     for condition in major:
-        _save(palette_strip(result, condition), directory, f"palette_{condition.key}", formats, dpi)
-    _save(cvd_overview(result), directory, "cvd_overview", formats, dpi)
+        save_figure(
+            palette_strip(result, condition), directory, f"palette_{condition.key}", formats, dpi
+        )
+    save_figure(cvd_overview(result), directory, "cvd_overview", formats, dpi)
     for kind in ("protan", "deutan"):
-        _save(severity_progression(result, kind), directory, f"severity_{kind}", formats, dpi)
+        save_figure(severity_progression(result, kind), directory, f"severity_{kind}", formats, dpi)
     for condition in major[:-1]:
-        _save(heatmap(result, condition, vmax), directory, f"heatmap_{condition.key}", formats, dpi)
-        _save(
+        save_figure(
+            heatmap(result, condition, vmax),
+            directory,
+            f"heatmap_{condition.key}",
+            formats,
+            dpi,
+        )
+        save_figure(
             pair_matrix(result, condition, vmax), directory, f"pairs_{condition.key}", formats, dpi
         )
-    _save(weakest_pairs(result), directory, "weakest_pairs", formats, dpi)
-    _save(severity_curve(result), directory, "minimum_distance_severity", formats, dpi)
+    save_figure(weakest_pairs(result), directory, "weakest_pairs", formats, dpi)
+    save_figure(severity_curve(result), directory, "minimum_distance_severity", formats, dpi)

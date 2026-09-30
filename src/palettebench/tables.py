@@ -7,29 +7,35 @@ import json
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
+import numpy as np
+
 from .analysis import AnalysisResult, ConditionResult
 
 
-def _markdown(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
+def markdown_table(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
     lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
     lines.extend("| " + " | ".join(str(value) for value in row) + " |" for row in rows)
     return "\n".join(lines) + "\n"
 
 
 def _latex_escape(value: object) -> str:
-    text = str(value)
-    for old, new in (
-        ("\\", r"\textbackslash{}"),
-        ("_", r"\_"),
-        ("%", r"\%"),
-        ("&", r"\&"),
-        ("#", r"\#"),
-    ):
-        text = text.replace(old, new)
-    return text
+    replacements = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+        "\n": " ",
+    }
+    return "".join(replacements.get(character, character) for character in str(value))
 
 
-def _latex(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
+def latex_table(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
     rows = list(rows)
     columns = "l" + "r" * (len(headers) - 1)
     body = [
@@ -82,8 +88,12 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
         ]
         for c in result.colours
     ]
-    (table_dir / "colours.md").write_text(_markdown(colour_headers, colour_rows), encoding="utf-8")
-    (table_dir / "colours.tex").write_text(_latex(colour_headers, colour_rows), encoding="utf-8")
+    (table_dir / "colours.md").write_text(
+        markdown_table(colour_headers, colour_rows), encoding="utf-8"
+    )
+    (table_dir / "colours.tex").write_text(
+        latex_table(colour_headers, colour_rows), encoding="utf-8"
+    )
 
     summary_headers = [
         "Condition",
@@ -111,9 +121,11 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
         for s in result.summaries
     ]
     (table_dir / "summary.md").write_text(
-        _markdown(summary_headers, summary_rows), encoding="utf-8"
+        markdown_table(summary_headers, summary_rows), encoding="utf-8"
     )
-    (table_dir / "summary.tex").write_text(_latex(summary_headers, summary_rows), encoding="utf-8")
+    (table_dir / "summary.tex").write_text(
+        latex_table(summary_headers, summary_rows), encoding="utf-8"
+    )
 
     selected = {"normal", "protan100", "deutan100", "tritan100"}
     for condition in result.conditions:
@@ -121,10 +133,10 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
             headers = ["Colour", *(colour.id for colour in result.palette.colours)]
             rows = _matrix_rows(result, condition)
             (table_dir / f"deltae_{condition.key}.md").write_text(
-                _markdown(headers, rows), encoding="utf-8"
+                markdown_table(headers, rows), encoding="utf-8"
             )
             (table_dir / f"deltae_{condition.key}.tex").write_text(
-                _latex(headers, rows), encoding="utf-8"
+                latex_table(headers, rows), encoding="utf-8"
             )
 
     with (data_dir / "colours.csv").open("w", newline="", encoding="utf-8") as handle:
@@ -199,14 +211,94 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
             "pair_count",
             "minimum_within_group",
             "minimum_between_group",
-        ] + [f"below_{t:g}" for t in result.config.thresholds]
+        ] + [
+            field
+            for threshold in result.config.thresholds
+            for field in (f"below_{threshold:g}_count", f"below_{threshold:g}_fraction")
+        ]
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for s in result.summaries:
             row = {field: getattr(s, field) for field in fields if hasattr(s, field)}
             row["minimum_pair"] = "/".join(s.minimum_pair)
-            row.update({f"below_{t:g}": s.below[t] for t in result.config.thresholds})
+            for threshold in result.config.thresholds:
+                row[f"below_{threshold:g}_count"] = s.below[threshold]
+                row[f"below_{threshold:g}_fraction"] = s.below_fraction[threshold]
             writer.writerow(row)
+
+    relationships = ("within", "between", "ungrouped")
+    grouped_table_rows: list[list[object]] = []
+    with (data_dir / "group_summary.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(
+            [
+                "condition",
+                "kind",
+                "severity",
+                "relationship",
+                "count",
+                "minimum",
+                "maximum",
+                "mean",
+                "median",
+                "std",
+            ]
+        )
+        for condition in result.conditions:
+            condition_pairs = [pair for pair in result.pairs if pair.condition == condition.key]
+            for relationship in relationships:
+                values = np.asarray(
+                    [
+                        pair.delta_e_00
+                        for pair in condition_pairs
+                        if pair.relationship == relationship
+                    ],
+                    dtype=float,
+                )
+                if values.size:
+                    data_row = [
+                        condition.key,
+                        condition.kind,
+                        condition.severity,
+                        relationship,
+                        values.size,
+                        values.min(),
+                        values.max(),
+                        values.mean(),
+                        np.median(values),
+                        values.std(ddof=0),
+                    ]
+                    writer.writerow(data_row)
+                    if relationship in {"within", "between"}:
+                        grouped_table_rows.append(
+                            [
+                                condition.key,
+                                condition.severity,
+                                relationship,
+                                values.size,
+                                f"{values.min():.2f}",
+                                f"{values.mean():.2f}",
+                                f"{np.median(values):.2f}",
+                                f"{values.max():.2f}",
+                            ]
+                        )
+    if grouped_table_rows:
+        group_headers = [
+            "Condition",
+            "Severity",
+            "Relationship",
+            "Pairs",
+            "Minimum",
+            "Mean",
+            "Median",
+            "Maximum",
+        ]
+        (table_dir / "groups.md").write_text(
+            markdown_table(group_headers, grouped_table_rows), encoding="utf-8"
+        )
+        (table_dir / "groups.tex").write_text(
+            latex_table(group_headers, grouped_table_rows), encoding="utf-8"
+        )
 
     with (data_dir / "conditions.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)

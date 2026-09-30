@@ -70,6 +70,7 @@ class SummaryResult:
     std: float
     q10: float
     below: dict[float, int]
+    below_fraction: dict[float, float]
     pair_count: int
     minimum_within_group: float | None
     minimum_between_group: float | None
@@ -165,6 +166,10 @@ def _summarise(
         float(values.std(ddof=0)),
         float(np.percentile(values, 10)),
         {threshold: int(np.count_nonzero(values < threshold)) for threshold in thresholds},
+        {
+            threshold: float(np.count_nonzero(values < threshold) / len(values))
+            for threshold in thresholds
+        },
         len(values),
         min(within) if within else None,
         min(between) if between else None,
@@ -194,8 +199,9 @@ def analyse_palette(palette: Palette, config: AnalysisConfig | None = None) -> A
     )
 
     conditions = [_condition("normal", "normal", 0, "Normal", rgb)]
+    report_severities = tuple(dict.fromkeys((*config.severities, 100)))
     for kind in ("protan", "deutan"):
-        for severity in config.severities:
+        for severity in report_severities:
             conditions.append(
                 _condition(
                     f"{kind}{severity}",

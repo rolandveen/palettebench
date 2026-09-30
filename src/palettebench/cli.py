@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+from importlib.resources import files
 from pathlib import Path
-
-from .analysis import AnalysisConfig, analyse_palette
-from .palette import PaletteError, load_palette
-from .report import write_comparison, write_report
 
 
 def _formats(value: str) -> tuple[str, ...]:
@@ -39,6 +36,8 @@ def build_parser() -> argparse.ArgumentParser:
     audit = subparsers.add_parser("audit", help="audit one palette")
     audit.add_argument("palette", type=Path)
     audit.add_argument("--output", "-o", type=Path)
+    example = subparsers.add_parser("example", help="write the bundled Okabe–Ito YAML example")
+    example.add_argument("--output", "-o", type=Path, default=Path("okabe-ito.yaml"))
     compare = subparsers.add_parser("compare", help="compare palettes, using the first as baseline")
     compare.add_argument("palettes", nargs="+", type=Path)
     compare.add_argument("--output", "-o", type=Path, default=Path("reports/comparison"))
@@ -56,9 +55,21 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     arguments = list(sys.argv[1:] if argv is None else argv)
-    if arguments and arguments[0] not in {"audit", "compare", "-h", "--help"}:
+    if arguments and arguments[0] not in {"audit", "compare", "example", "-h", "--help"}:
         arguments.insert(0, "audit")
     args = parser.parse_args(arguments)
+    if args.command == "example":
+        if args.output.exists():
+            parser.error(f"refusing to overwrite existing file: {args.output}")
+        resource = files("palettebench.data").joinpath("okabe-ito.yaml")
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(resource.read_text(encoding="utf-8"), encoding="utf-8")
+        print(f"Wrote example palette to {args.output}")
+        return
+    from .analysis import AnalysisConfig, analyse_palette
+    from .palette import PaletteError, load_palette
+    from .report import write_comparison, write_report
+
     try:
         config = AnalysisConfig(severities=args.severities)
         if args.command == "compare":

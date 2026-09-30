@@ -1,0 +1,8 @@
+# Runtime dependencies. pyproject.toml is the canonical package definition.
+numpy>=1.26
+matplotlib>=3.8
+PyYAML>=6.0
+colorspacious>=1.1.2
+colour-science>=0.4.4
+scipy>=1.11
+

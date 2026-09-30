@@ -4,18 +4,38 @@ PaletteBench is a small Python package for reproducible perceptual and simulated
 
 It reports transparent, condition-specific measurements rather than an opaque accessibility score. Simulations and colour differences support an assessment; they do not replace evaluation with people who have colour-vision deficiencies.
 
-The complete scientific assumptions, schema, metric definitions, output contract, figure catalogue, comparison behaviour, validation strategy, and interpretation guidance are documented in [Design and methodology](docs/design-and-methodology.md).
+Start with the [User manual](docs/manual.md). The complete scientific assumptions, schema, metric definitions, output contract, figure catalogue, comparison behaviour, validation strategy, and interpretation guidance are documented in [Design and methodology](docs/design-and-methodology.md).
+
+![Example PaletteBench palette strip](docs/example-palette.svg)
 
 ## Installation
 
 Python 3.11 or newer is required.
 
+With Conda:
+
 ```bash
 git clone https://github.com/rolandveen/palettebench.git
 cd palettebench
-conda create -n palettebench python=3.11 pip
+conda env create -f environment.yml
 conda activate palettebench
-pip install -e ".[test]"
+```
+
+With a Python virtual environment:
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pip install -e .
+```
+
+Development dependencies are available through `python -m pip install -e ".[dev]"` or `requirements-dev.txt`.
+
+An installed package can write a copy of its bundled baseline without a repository checkout:
+
+```bash
+palettebench example --output okabe-ito.yaml
 ```
 
 ## Single-palette audit

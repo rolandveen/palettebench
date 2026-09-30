@@ -9,7 +9,18 @@ description = "Reproducible perceptual and colour-vision-deficiency audits for s
 readme = "README.md"
 requires-python = ">=3.11"
 license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 authors = [{name = "Roland J. Veen"}]
+keywords = ["accessibility", "colour", "color", "palette", "scientific-visualization"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Visualization",
+]
 dependencies = [
   "numpy>=1.26",
   "matplotlib>=3.8",
@@ -21,12 +32,22 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8", "ruff>=0.6"]
+dev = ["pytest>=8", "ruff>=0.6", "build>=1.2"]
+
+[project.urls]
+Homepage = "https://github.com/rolandveen/palettebench"
+Documentation = "https://github.com/rolandveen/palettebench#readme"
+Repository = "https://github.com/rolandveen/palettebench"
+Issues = "https://github.com/rolandveen/palettebench/issues"
 
 [project.scripts]
 palettebench = "palettebench.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+palettebench = ["data/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

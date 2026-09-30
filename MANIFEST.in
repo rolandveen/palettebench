@@ -1,0 +1,8 @@
+include CHANGELOG.md
+include CITATION.cff
+include environment.yml
+include requirements.txt
+include requirements-dev.txt
+recursive-include docs *.md *.svg
+recursive-include palettes *.yaml
+
