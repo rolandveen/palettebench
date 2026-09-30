@@ -1,5 +1,7 @@
 # PaletteBench
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23071830.svg)](https://doi.org/10.5281/zenodo.23071830)
+
 PaletteBench is a small Python package for reproducible perceptual and simulated colour-vision-deficiency audits of categorical scientific palettes. A YAML palette produces publication-ready SVG/PDF figures, PNG previews, Markdown and LaTeX tables, tidy CSV/JSON data, and a concise technical report.
 
 It reports transparent, condition-specific measurements rather than an opaque accessibility score. Simulations and colour differences support an assessment; they do not replace evaluation with people who have colour-vision deficiencies.
@@ -104,9 +106,9 @@ Maintainers can follow the [release checklist](docs/releasing.md) when preparing
 
 ## Citation
 
-If PaletteBench contributes to published work, please cite the archived software release used in the analysis. GitHub can generate common citation formats from [`CITATION.cff`](CITATION.cff). Until the first Zenodo DOI is minted, the `v0.1.0` release can be cited as:
+If PaletteBench contributes to published work, please cite the archived software release used in the analysis. GitHub can generate common citation formats from [`CITATION.cff`](CITATION.cff). The `v0.1.0` release should be cited with its version-specific DOI:
 
-> Veen, R. J. (2026). *PaletteBench* (Version 0.1.0) [Computer software]. https://github.com/rolandveen/palettebench
+> Veen, R. J. (2026). *PaletteBench* (Version 0.1.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.23071831
 
 BibTeX:
 
@@ -116,12 +118,13 @@ BibTeX:
   title   = {PaletteBench},
   year    = {2026},
   version = {0.1.0},
-  url     = {https://github.com/rolandveen/palettebench},
+  doi     = {10.5281/zenodo.23071831},
+  url     = {https://github.com/rolandveen/palettebench/tree/v0.1.0},
   license = {BSD-3-Clause}
 }
 ```
 
-After Zenodo archives the first release, this section will use the permanent DOI and the README will display Zenodo's DOI badge.
+The badge at the top of this README uses the concept DOI, which resolves to the latest archived release. For reproducible citation, use the version DOI above.
 
 ## References
 

@@ -4,6 +4,10 @@ All notable changes to PaletteBench will be documented here. The project follows
 
 ## Unreleased
 
+### Documentation
+
+- Add the Zenodo concept DOI badge and the version-specific DOI for citing PaletteBench 0.1.0.
+
 ## 0.1.0 - 2026-09-30
 
 Initial public release.

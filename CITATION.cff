@@ -14,9 +14,10 @@ authors:
     affiliation: "University of Groningen; MRC Laboratory of Medical Sciences"
 version: 0.1.0
 date-released: 2026-09-30
+doi: "10.5281/zenodo.23071831"
 license: BSD-3-Clause
 repository-code: "https://github.com/rolandveen/palettebench"
-url: "https://github.com/rolandveen/palettebench"
+url: "https://github.com/rolandveen/palettebench/tree/v0.1.0"
 keywords:
   - accessibility
   - categorical palettes
