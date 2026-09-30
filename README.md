@@ -4,7 +4,7 @@ PaletteBench is a small Python package for reproducible perceptual and simulated
 
 It reports transparent, condition-specific measurements rather than an opaque accessibility score. Simulations and colour differences support an assessment; they do not replace evaluation with people who have colour-vision deficiencies.
 
-Start with the [User manual](docs/manual.md). The complete scientific assumptions, schema, metric definitions, output contract, figure catalogue, comparison behaviour, validation strategy, and interpretation guidance are documented in [Design and methodology](docs/design-and-methodology.md).
+Start with the [User manual](docs/manual.md). The complete scientific assumptions, schema, metric definitions, output contract, figure catalogue, comparison behaviour, validation strategy, and interpretation guidance are documented in [Design and methodology](docs/design-and-methodology.md). The [Okabe–Ito rationale](docs/okabe-ito-rationale.md) separates the original authors' design principles from the measurements PaletteBench can make.
 
 ![Example PaletteBench palette strip](docs/example-palette.svg)
 
@@ -66,6 +66,13 @@ The generated `report.md` links every key figure and table. `data/pairwise.csv` 
 cp palettes/okabe-ito.yaml palettes/my-palette.yaml
 # Edit the copied YAML, then:
 palettebench compare palettes/okabe-ito.yaml palettes/my-palette.yaml \
+  --output reports/comparison
+```
+
+When PaletteBench is installed without a repository checkout, use the bundled baseline directly:
+
+```bash
+palettebench compare --okabe-ito-baseline my-palette.yaml \
   --output reports/comparison
 ```
 

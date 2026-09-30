@@ -159,9 +159,18 @@ palettebench compare \
   --output reports/comparison
 ```
 
-The comparison report contains condition-level minimum, maximum, mean, median, standard deviation, weakest pair, and minimum-distance change from baseline. It also includes aligned palette strips and severity curves. Full-precision CSV/JSON, Markdown/LaTeX tables, copied inputs, and metadata are retained.
+The installed package can supply the baseline automatically:
+
+```bash
+palettebench compare --okabe-ito-baseline palettes/variant-a.yaml \
+  --output reports/comparison
+```
+
+The comparison report contains condition-level minimum, 10th percentile, mean, median, maximum, standard deviation, weakest pair, threshold-count changes, and changes from baseline. It also includes aligned palette strips, severity curves, a minimum-distance change chart, and the largest pair-level increases and decreases for colours with matching IDs. `data/pairwise_coverage.csv` makes incomplete ID matching explicit. Full-precision CSV/JSON, Markdown/LaTeX tables, copied inputs, and metadata are retained.
 
 Comparison does not calculate a single accessibility score. Review changes condition by condition and in relation to the palette's category semantics.
+
+For variants derived from the bundled baseline, read [Okabe–Ito baseline: original rationale and audit scope](okabe-ito-rationale.md). A positive metric change means greater modelled separation, not automatic superiority across colour naming, print reproduction, semantic grouping, or human use.
 
 ## 6. Report contents
 

@@ -186,11 +186,14 @@ palettebench compare \
 
 It reports, by palette and condition:
 
-- minimum, mean, and median ΔE00;
+- minimum, 10th percentile, mean, median, maximum, and standard deviation of ΔE00;
 - the weakest pair;
-- change in minimum ΔE00 relative to the baseline;
+- absolute and signed changes from the baseline;
+- changes in counts and fractions below each descriptive threshold;
+- the largest pair-level increases and decreases when colour IDs match;
+- pair-matching coverage, so comparisons with added, removed, or renamed colours are not silently treated as complete;
 - side-by-side normal, simulated CVD, and grayscale strips;
-- overlaid minimum-distance-versus-severity curves.
+- overlaid minimum-distance-versus-severity curves and a minimum-change chart.
 
 PaletteBench does not combine these into a single accessibility score or an unconditional ranking. Different conditions, category semantics, intended media, and graphical contexts remain visible in the evidence.
 
@@ -241,6 +244,8 @@ Claims made from an audit should stay proportional to the conditions and measure
 
 ## Baseline provenance
 
+The original design choices and the boundary between that rationale and PaletteBench's metrics are discussed in [Okabe–Ito baseline: original rationale and audit scope](okabe-ito-rationale.md).
+
 The bundled baseline uses the canonical eight-colour sequence:
 
 1. orange `#E69F00`;
@@ -266,4 +271,3 @@ The palette is attributed to Masataka Okabe and Kei Ito's Color Universal Design
 ## Licensing
 
 PaletteBench uses the permissive BSD 3-Clause License to support scientific reuse, redistribution, publication, and archiving.
-

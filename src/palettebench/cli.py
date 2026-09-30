@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from importlib.resources import files
+from importlib.resources import as_file, files
 from pathlib import Path
 
 
@@ -40,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
     example.add_argument("--output", "-o", type=Path, default=Path("okabe-ito.yaml"))
     compare = subparsers.add_parser("compare", help="compare palettes, using the first as baseline")
     compare.add_argument("palettes", nargs="+", type=Path)
+    compare.add_argument(
+        "--okabe-ito-baseline",
+        action="store_true",
+        help="prepend the bundled Okabe–Ito palette as the baseline",
+    )
     compare.add_argument("--output", "-o", type=Path, default=Path("reports/comparison"))
     for target in (audit, compare):
         target.add_argument(
@@ -73,15 +78,20 @@ def main(argv: list[str] | None = None) -> None:
     try:
         config = AnalysisConfig(severities=args.severities)
         if args.command == "compare":
-            if len(args.palettes) < 2:
+            if not args.okabe_ito_baseline and len(args.palettes) < 2:
                 parser.error("compare requires at least two palette files")
-            destination = write_comparison(
-                [load_palette(path) for path in args.palettes],
-                args.output,
-                config,
-                args.formats,
-                args.dpi,
-            )
+            palettes = [load_palette(path) for path in args.palettes]
+            if args.okabe_ito_baseline:
+                resource = files("palettebench.data").joinpath("okabe-ito.yaml")
+                with as_file(resource) as baseline_path:
+                    palettes.insert(0, load_palette(baseline_path))
+                    destination = write_comparison(
+                        palettes, args.output, config, args.formats, args.dpi
+                    )
+            else:
+                destination = write_comparison(
+                    palettes, args.output, config, args.formats, args.dpi
+                )
         else:
             palette = load_palette(args.palette)
             destination = args.output or Path("reports") / palette.path.stem

@@ -19,3 +19,27 @@ def test_example_command_refuses_to_overwrite(tmp_path: Path):
     with pytest.raises(SystemExit):
         main(["example", "--output", str(output)])
     assert output.read_text() == "keep me"
+
+
+def test_compare_can_supply_okabe_ito_baseline(tmp_path: Path, capsys):
+    variant = tmp_path / "variant.yaml"
+    main(["example", "--output", str(variant)])
+    output = tmp_path / "comparison"
+
+    main(
+        [
+            "compare",
+            "--okabe-ito-baseline",
+            str(variant),
+            "--output",
+            str(output),
+            "--format",
+            "svg",
+        ]
+    )
+
+    assert (output / "report.md").is_file()
+    metadata = (output / "metadata.json").read_text()
+    assert '"name": "Okabe-Ito"' in metadata
+    assert len(list((output / "inputs").glob("*.yaml"))) == 2
+    assert f"Wrote report to {output}" in capsys.readouterr().out

@@ -261,25 +261,48 @@ def write_comparison(
     keys = ("normal", "protan100", "deutan100", "tritan100", "grayscale")
     rows: list[dict[str, object]] = []
     baseline = {s.condition: s for s in results[0].summaries}
-    for result in results:
+    for palette_index, result in enumerate(results):
         for summary in result.summaries:
             if summary.condition in keys:
-                rows.append(
-                    {
-                        "palette": result.palette.name,
-                        "condition": summary.condition,
-                        "severity": summary.severity,
-                        "minimum": summary.minimum,
-                        "maximum": summary.maximum,
-                        "mean": summary.mean,
-                        "median": summary.median,
-                        "std": summary.std,
-                        "q10": summary.q10,
-                        "weakest_pair": "/".join(summary.minimum_pair),
-                        "minimum_change_from_baseline": summary.minimum
-                        - baseline[summary.condition].minimum,
-                    }
-                )
+                reference = baseline[summary.condition]
+                minimum_change = summary.minimum - reference.minimum
+                row: dict[str, object] = {
+                    "palette": result.palette.name,
+                    "palette_index": palette_index,
+                    "condition": summary.condition,
+                    "severity": summary.severity,
+                    "minimum": summary.minimum,
+                    "minimum_change_from_baseline": minimum_change,
+                    "q10": summary.q10,
+                    "q10_change_from_baseline": summary.q10 - reference.q10,
+                    "mean": summary.mean,
+                    "mean_change_from_baseline": summary.mean - reference.mean,
+                    "median": summary.median,
+                    "median_change_from_baseline": summary.median - reference.median,
+                    "maximum": summary.maximum,
+                    "std": summary.std,
+                    "weakest_pair": "/".join(summary.minimum_pair),
+                    "minimum_separation_direction": (
+                        "baseline"
+                        if result is results[0]
+                        else "increased"
+                        if minimum_change > 1e-12
+                        else "decreased"
+                        if minimum_change < -1e-12
+                        else "unchanged"
+                    ),
+                }
+                for threshold in config.thresholds:
+                    label = f"below_{threshold:g}"
+                    row[f"{label}_count"] = summary.below[threshold]
+                    row[f"{label}_count_change_from_baseline"] = (
+                        summary.below[threshold] - reference.below[threshold]
+                    )
+                    row[f"{label}_fraction"] = summary.below_fraction[threshold]
+                    row[f"{label}_fraction_change_from_baseline"] = (
+                        summary.below_fraction[threshold] - reference.below_fraction[threshold]
+                    )
+                rows.append(row)
     with (destination / "data" / "comparison.csv").open(
         "w", newline="", encoding="utf-8"
     ) as handle:
@@ -290,31 +313,39 @@ def write_comparison(
         json.dumps(rows, indent=2) + "\n", encoding="utf-8"
     )
     table_headers = [
+        "Palette #",
         "Palette",
         "Condition",
         "Severity",
         "Minimum ΔE00",
+        "Δ minimum",
+        "10th percentile",
+        "Δ 10th percentile",
         "Weakest pair",
-        "Change from baseline",
         "Mean",
+        "Δ mean",
         "Median",
+        "Δ median",
         "Maximum",
         "SD",
-        "10th percentile",
     ]
     table_rows = [
         [
+            row["palette_index"] + 1,
             row["palette"],
             row["condition"],
             row["severity"],
             f"{row['minimum']:.2f}",
-            row["weakest_pair"],
             f"{row['minimum_change_from_baseline']:+.2f}",
+            f"{row['q10']:.2f}",
+            f"{row['q10_change_from_baseline']:+.2f}",
+            row["weakest_pair"],
             f"{row['mean']:.2f}",
+            f"{row['mean_change_from_baseline']:+.2f}",
             f"{row['median']:.2f}",
+            f"{row['median_change_from_baseline']:+.2f}",
             f"{row['maximum']:.2f}",
             f"{row['std']:.2f}",
-            f"{row['q10']:.2f}",
         ]
         for row in rows
     ]
@@ -322,6 +353,133 @@ def write_comparison(
     (destination / "tables" / "comparison.md").write_text(comparison_markdown, encoding="utf-8")
     (destination / "tables" / "comparison.tex").write_text(
         latex_table(table_headers, table_rows), encoding="utf-8"
+    )
+
+    baseline_pairs = {
+        (pair.condition, *sorted((pair.colour1, pair.colour2))): pair for pair in results[0].pairs
+    }
+    pair_changes: list[dict[str, object]] = []
+    for palette_index, result in enumerate(results[1:], start=1):
+        for pair in result.pairs:
+            reference = baseline_pairs.get((pair.condition, *sorted((pair.colour1, pair.colour2))))
+            if reference is None:
+                continue
+            change = pair.delta_e_00 - reference.delta_e_00
+            pair_changes.append(
+                {
+                    "palette": result.palette.name,
+                    "palette_index": palette_index,
+                    "condition": pair.condition,
+                    "kind": pair.kind,
+                    "severity": pair.severity,
+                    "colour1": pair.colour1,
+                    "colour2": pair.colour2,
+                    "baseline_delta_e_00": reference.delta_e_00,
+                    "palette_delta_e_00": pair.delta_e_00,
+                    "change_from_baseline": change,
+                    "direction": (
+                        "increased"
+                        if change > 1e-12
+                        else "decreased"
+                        if change < -1e-12
+                        else "unchanged"
+                    ),
+                }
+            )
+    pair_change_fields = [
+        "palette",
+        "palette_index",
+        "condition",
+        "kind",
+        "severity",
+        "colour1",
+        "colour2",
+        "baseline_delta_e_00",
+        "palette_delta_e_00",
+        "change_from_baseline",
+        "direction",
+    ]
+    with (destination / "data" / "pairwise_changes.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=pair_change_fields)
+        writer.writeheader()
+        writer.writerows(pair_changes)
+    (destination / "data" / "pairwise_changes.json").write_text(
+        json.dumps(pair_changes, indent=2) + "\n", encoding="utf-8"
+    )
+    coverage_rows: list[dict[str, object]] = []
+    for palette_index, result in enumerate(results[1:], start=1):
+        for condition in keys:
+            baseline_count = sum(pair.condition == condition for pair in results[0].pairs)
+            matched_count = sum(
+                row["palette_index"] == palette_index and row["condition"] == condition
+                for row in pair_changes
+            )
+            coverage_rows.append(
+                {
+                    "palette": result.palette.name,
+                    "palette_index": palette_index,
+                    "condition": condition,
+                    "baseline_pair_count": baseline_count,
+                    "matched_pair_count": matched_count,
+                    "matched_fraction": matched_count / baseline_count if baseline_count else 0.0,
+                }
+            )
+    with (destination / "data" / "pairwise_coverage.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(coverage_rows[0]))
+        writer.writeheader()
+        writer.writerows(coverage_rows)
+
+    diagnostic_rows: list[list[object]] = []
+    for palette_index, result in enumerate(results[1:], start=1):
+        for condition in keys:
+            matches = [
+                row
+                for row in pair_changes
+                if row["palette_index"] == palette_index and row["condition"] == condition
+            ]
+            for label, selected in (
+                (
+                    "Largest increase",
+                    sorted(matches, key=lambda row: row["change_from_baseline"], reverse=True)[:3],
+                ),
+                (
+                    "Largest decrease",
+                    sorted(matches, key=lambda row: row["change_from_baseline"])[:3],
+                ),
+            ):
+                for row in selected:
+                    diagnostic_rows.append(
+                        [
+                            palette_index + 1,
+                            result.palette.name,
+                            condition,
+                            label,
+                            f"{row['colour1']} / {row['colour2']}",
+                            f"{row['baseline_delta_e_00']:.2f}",
+                            f"{row['palette_delta_e_00']:.2f}",
+                            f"{row['change_from_baseline']:+.2f}",
+                        ]
+                    )
+    diagnostic_headers = [
+        "Palette #",
+        "Palette",
+        "Condition",
+        "Diagnostic",
+        "Pair",
+        "Baseline ΔE00",
+        "Palette ΔE00",
+        "Change",
+    ]
+    diagnostic_markdown = markdown_table(diagnostic_headers, diagnostic_rows)
+    (destination / "tables" / "pairwise_changes.md").write_text(
+        diagnostic_markdown, encoding="utf-8"
+    )
+    (destination / "tables" / "pairwise_changes.tex").write_text(
+        latex_table(diagnostic_headers, diagnostic_rows), encoding="utf-8"
     )
 
     fig, axes = plt.subplots(
@@ -344,7 +502,7 @@ def write_comparison(
                 ax.text(
                     -0.04,
                     0.5,
-                    result.palette.name,
+                    f"{row_index + 1}. {result.palette.name}",
                     transform=ax.transAxes,
                     ha="right",
                     va="center",
@@ -353,19 +511,43 @@ def write_comparison(
     save_figure(fig, destination / "figures", "palette_comparison", formats, dpi)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.8))
-    for result in results:
+    for palette_index, result in enumerate(results, start=1):
         for kind, style in (("protan", "-"), ("deutan", "--")):
             points = [p for p in result.curves if p.kind == kind]
             ax.plot(
                 [p.severity for p in points],
                 [p.minimum for p in points],
                 style,
-                label=f"{result.palette.name} — {kind}",
+                label=f"{palette_index}. {result.palette.name} — {kind}",
             )
     ax.set(xlabel="Simulated severity (%)", ylabel="Minimum pairwise ΔE00", xlim=(0, 100))
     ax.grid(True, color="0.9")
     ax.legend(frameon=False, fontsize=7, ncol=2)
     save_figure(fig, destination / "figures", "minimum_distance_comparison", formats, dpi)
+
+    fig, ax = plt.subplots(figsize=(8.2, 4.8))
+    candidates = results[1:]
+    positions = list(range(len(keys)))
+    width = 0.8 / max(1, len(candidates))
+    for candidate_index, result in enumerate(candidates):
+        candidate_rows = {
+            row["condition"]: row for row in rows if row["palette_index"] == candidate_index + 1
+        }
+        offset = (candidate_index - (len(candidates) - 1) / 2) * width
+        ax.bar(
+            [position + offset for position in positions],
+            [candidate_rows[key]["minimum_change_from_baseline"] for key in keys],
+            width=width,
+            label=f"{candidate_index + 2}. {result.palette.name}",
+        )
+    ax.axhline(0, color="black", linewidth=0.8)
+    ax.set_xticks(positions, ["Normal", "Protan 100%", "Deutan 100%", "Tritan 100%", "Grayscale"])
+    ax.tick_params(axis="x", rotation=25)
+    ax.set_ylabel("Change in minimum pairwise ΔE00")
+    ax.set_title("Minimum-separation change relative to baseline")
+    ax.grid(True, axis="y", color="0.9", linewidth=0.8)
+    ax.legend(frameon=False, fontsize=8)
+    save_figure(fig, destination / "figures", "minimum_change_comparison", formats, dpi)
     metadata = {
         "palettebench_version": __version__,
         "python_version": platform.python_version(),
@@ -382,19 +564,29 @@ def write_comparison(
     lines = [
         "# Palette comparison",
         "",
-        f"Baseline: **{results[0].palette.name}**",
+        f"Baseline (palette 1): **{results[0].palette.name}**",
         "",
         f"![Palette comparison](figures/palette_comparison.{preview})",
         "",
         f"![Minimum distance comparison](figures/minimum_distance_comparison.{preview})",
         "",
-        "Results remain condition-specific; no aggregate accessibility score or ranking is computed.",
+        f"![Minimum-separation change](figures/minimum_change_comparison.{preview})",
+        "",
+        "Positive Δ values mean greater modelled separation than the baseline; negative values mean reduced modelled separation. These are objective changes in the stated metric, not universal accessibility verdicts. Results remain condition-specific; no aggregate accessibility score or ranking is computed.",
         "",
         "## Condition-level results",
         "",
         comparison_markdown.rstrip(),
         "",
-        "Full-precision values are in [`data/comparison.csv`](data/comparison.csv) and [`data/comparison.json`](data/comparison.json). Reproducibility metadata is in [`metadata.json`](metadata.json), and exact input copies are in `inputs/`.",
+        "Threshold count and fraction changes are included in the full-precision comparison data.",
+        "",
+        "## Largest matched-pair changes",
+        "",
+        "Pairs are matched by colour ID. Increased ΔE00 means greater modelled separation; decreased ΔE00 means reduced modelled separation. Matching coverage is recorded in [`data/pairwise_coverage.csv`](data/pairwise_coverage.csv), so palettes with added, removed, or renamed IDs are not silently treated as complete pairwise comparisons.",
+        "",
+        diagnostic_markdown.rstrip(),
+        "",
+        "Full-precision summaries are in [`data/comparison.csv`](data/comparison.csv) and [`data/comparison.json`](data/comparison.json). Every matched pair is in [`data/pairwise_changes.csv`](data/pairwise_changes.csv) and [`data/pairwise_changes.json`](data/pairwise_changes.json). Reproducibility metadata is in [`metadata.json`](metadata.json), and exact input copies are in `inputs/`.",
         "",
     ]
     (destination / "report.md").write_text("\n".join(lines), encoding="utf-8")
