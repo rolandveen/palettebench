@@ -100,6 +100,27 @@ Run tests with `pytest`.
 
 Maintainers can follow the [release checklist](docs/releasing.md) when preparing a versioned archive.
 
+## Citation
+
+If PaletteBench contributes to published work, please cite the archived software release used in the analysis. GitHub can generate common citation formats from [`CITATION.cff`](CITATION.cff). Until the first Zenodo DOI is minted, the `v0.1.0` release can be cited as:
+
+> Veen, R. J. (2026). *PaletteBench* (Version 0.1.0) [Computer software]. https://github.com/rolandveen/palettebench
+
+BibTeX:
+
+```bibtex
+@software{veen_palettebench_2026,
+  author  = {Veen, Roland Janno},
+  title   = {PaletteBench},
+  year    = {2026},
+  version = {0.1.0},
+  url     = {https://github.com/rolandveen/palettebench},
+  license = {BSD-3-Clause}
+}
+```
+
+After Zenodo archives the first release, this section will use the permanent DOI and the README will display Zenodo's DOI badge.
+
 ## References
 
 - Okabe, M. & Ito, K. *Color Universal Design (CUD): How to make figures and presentations that are friendly to Colorblind people*. https://jfly.uni-koeln.de/color/
