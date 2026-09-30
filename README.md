@@ -37,6 +37,7 @@ Development dependencies are available through `python -m pip install -e ".[dev]
 An installed package can write a copy of its bundled baseline without a repository checkout:
 
 ```bash
+palettebench --version
 palettebench example --output okabe-ito.yaml
 ```
 
@@ -76,7 +77,7 @@ palettebench compare --okabe-ito-baseline my-palette.yaml \
   --output reports/comparison
 ```
 
-The first palette is the baseline. Comparisons preserve minimum, mean, and median ΔE00, weakest pairs, baseline changes, strips, and severity curves; they do not collapse these into one score.
+The first palette is the baseline. Comparisons report the minimum, lower tail, mean, median, threshold counts, weakest pairs, and largest matched-pair increases and decreases under each condition. They also retain aligned strips, severity curves, a minimum-change chart, matching coverage, and full-precision data. Results are not collapsed into one accessibility score.
 
 Colours may optionally declare a `group`. PaletteBench labels each pair as within-group, between-group, or ungrouped and reports group minima without inventing a universal hierarchy score.
 
@@ -96,6 +97,8 @@ PaletteBench treats YAML values as gamma-encoded sRGB. It uses Colorspacious's `
 The standard report includes normal vision; protan and deutan simulations at 20–100%; tritan at 100%; and grayscale. Partial tritan severity remains available through the simulation function but is deliberately not emphasised. Threshold counts are descriptive only: no ΔE00 cutoff universally establishes accessibility.
 
 Run tests with `pytest`.
+
+Maintainers can follow the [release checklist](docs/releasing.md) when preparing a versioned archive.
 
 ## References
 

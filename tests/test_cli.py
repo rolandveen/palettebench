@@ -5,6 +5,14 @@ import pytest
 from palettebench.cli import main
 
 
+def test_version_command_reports_installed_version(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+
+    assert exc_info.value.code == 0
+    assert capsys.readouterr().out.startswith("palettebench ")
+
+
 def test_example_command_writes_valid_palette(tmp_path: Path, capsys):
     output = tmp_path / "example.yaml"
     main(["example", "--output", str(output)])

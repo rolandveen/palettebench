@@ -42,6 +42,7 @@ Verify the installation:
 
 ```bash
 palettebench --help
+palettebench --version
 python -c "import palettebench; print(palettebench.__version__)"
 ```
 

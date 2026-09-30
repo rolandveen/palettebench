@@ -7,6 +7,8 @@ import sys
 from importlib.resources import as_file, files
 from pathlib import Path
 
+from . import __version__
+
 
 def _formats(value: str) -> tuple[str, ...]:
     result = tuple(part.strip().lower() for part in value.split(",") if part.strip())
@@ -32,6 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="palettebench", description="Audit scientific categorical colour palettes"
     )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
     audit = subparsers.add_parser("audit", help="audit one palette")
     audit.add_argument("palette", type=Path)
@@ -60,7 +63,14 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     arguments = list(sys.argv[1:] if argv is None else argv)
-    if arguments and arguments[0] not in {"audit", "compare", "example", "-h", "--help"}:
+    if arguments and arguments[0] not in {
+        "audit",
+        "compare",
+        "example",
+        "-h",
+        "--help",
+        "--version",
+    }:
         arguments.insert(0, "audit")
     args = parser.parse_args(arguments)
     if args.command == "example":

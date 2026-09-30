@@ -2,10 +2,24 @@ cff-version: 1.2.0
 message: "If you use PaletteBench, please cite this software."
 title: "PaletteBench"
 type: software
+abstract: >-
+  PaletteBench is a reproducible workbench for auditing categorical scientific
+  colour palettes under normal vision, simulated colour-vision deficiencies,
+  and grayscale. It produces publication-ready figures, tables, tidy data, and
+  baseline-relative comparisons using transparent perceptual measurements.
 authors:
   - family-names: Veen
-    given-names: Roland J.
+    given-names: Roland Janno
+    orcid: "https://orcid.org/0000-0002-4733-189X"
+    affiliation: "University of Groningen; MRC Laboratory of Medical Sciences"
 version: 0.1.0
 date-released: 2026-09-30
 license: BSD-3-Clause
 repository-code: "https://github.com/rolandveen/palettebench"
+url: "https://github.com/rolandveen/palettebench"
+keywords:
+  - accessibility
+  - categorical palettes
+  - color vision deficiency
+  - colour science
+  - scientific visualization
