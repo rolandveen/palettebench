@@ -21,7 +21,7 @@
       "sha256": "428348cb7f19cc6f098ef15075b18b18e485248ac252c7bad0a5be6f94e0c00a"
     }
   ],
-  "generated_utc": "2026-09-30T18:56:19.223331+00:00",
+  "generated_utc": "2026-09-30T21:37:57.673334+00:00",
   "configuration": {
     "severities": [
       20,
@@ -41,11 +41,150 @@
     "weakest_count": 5,
     "simulation": "Colorspacious sRGB1+CVD (Machado et al.) with display-bound clipping",
     "metric": "CIEDE2000 via colour-science; sRGB D65 to CIE Lab",
+    "standard_deviation": "population standard deviation (ddof=0)",
+    "quantile_method": "NumPy percentile, method=linear",
     "formats": [
       "svg",
       "pdf",
       "png"
     ],
     "dpi": 300
-  }
+  },
+  "gamut_clipping": [
+    {
+      "condition": "normal",
+      "clipped_colour_count": 0,
+      "clipped_channel_count": 0,
+      "clipped_colour_ids": [],
+      "raw_srgb_min": 0.0,
+      "raw_srgb_max": 0.9411764705882353
+    },
+    {
+      "condition": "protan20",
+      "clipped_colour_count": 2,
+      "clipped_channel_count": 2,
+      "clipped_colour_ids": [
+        "orange",
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.06923561361119517,
+      "raw_srgb_max": 0.9529359631104929
+    },
+    {
+      "condition": "protan40",
+      "clipped_colour_count": 2,
+      "clipped_channel_count": 2,
+      "clipped_colour_ids": [
+        "orange",
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.12652473198515174,
+      "raw_srgb_max": 0.9605967426632122
+    },
+    {
+      "condition": "protan60",
+      "clipped_colour_count": 2,
+      "clipped_channel_count": 2,
+      "clipped_colour_ids": [
+        "orange",
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.17548205348955814,
+      "raw_srgb_max": 0.965849729391436
+    },
+    {
+      "condition": "protan80",
+      "clipped_colour_count": 2,
+      "clipped_channel_count": 2,
+      "clipped_colour_ids": [
+        "orange",
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.21801315743881886,
+      "raw_srgb_max": 0.9695820900145004
+    },
+    {
+      "condition": "protan100",
+      "clipped_colour_count": 2,
+      "clipped_channel_count": 2,
+      "clipped_colour_ids": [
+        "orange",
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.25521949626095236,
+      "raw_srgb_max": 0.9723060075602729
+    },
+    {
+      "condition": "deutan20",
+      "clipped_colour_count": 2,
+      "clipped_channel_count": 2,
+      "clipped_colour_ids": [
+        "orange",
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.03254276222400069,
+      "raw_srgb_max": 0.9575209417856999
+    },
+    {
+      "condition": "deutan40",
+      "clipped_colour_count": 1,
+      "clipped_channel_count": 1,
+      "clipped_colour_ids": [
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.047087267666012254,
+      "raw_srgb_max": 0.9687539493041325
+    },
+    {
+      "condition": "deutan60",
+      "clipped_colour_count": 1,
+      "clipped_channel_count": 1,
+      "clipped_colour_ids": [
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.05090467932072504,
+      "raw_srgb_max": 0.9771091985721049
+    },
+    {
+      "condition": "deutan80",
+      "clipped_colour_count": 1,
+      "clipped_channel_count": 1,
+      "clipped_colour_ids": [
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.047692042083884265,
+      "raw_srgb_max": 0.9836857601507006
+    },
+    {
+      "condition": "deutan100",
+      "clipped_colour_count": 1,
+      "clipped_channel_count": 1,
+      "clipped_colour_ids": [
+        "vermillion"
+      ],
+      "raw_srgb_min": -0.039515812433786116,
+      "raw_srgb_max": 0.9890901724506479
+    },
+    {
+      "condition": "tritan100",
+      "clipped_colour_count": 4,
+      "clipped_channel_count": 4,
+      "clipped_colour_ids": [
+        "sky_blue",
+        "bluish_green",
+        "yellow",
+        "blue"
+      ],
+      "raw_srgb_min": -1.1951921525405125,
+      "raw_srgb_max": 1.0107988259922012
+    },
+    {
+      "condition": "grayscale",
+      "clipped_colour_count": 0,
+      "clipped_channel_count": 0,
+      "clipped_colour_ids": [],
+      "raw_srgb_min": 0.0,
+      "raw_srgb_max": 0.8777265927774837
+    }
+  ]
 }

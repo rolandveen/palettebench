@@ -2,6 +2,8 @@ import csv
 import json
 from pathlib import Path
 
+import pytest
+
 from palettebench import analyse_palette, load_palette
 from palettebench.analysis import AnalysisConfig
 from palettebench.report import write_comparison, write_report
@@ -27,6 +29,8 @@ def test_standard_outputs(tmp_path):
     assert len(metadata["input_sha256"]) == 64
     assert metadata["input_palette"] == "okabe-ito.yaml"
     assert not Path(metadata["input_palette"]).is_absolute()
+    assert any(row["clipped_colour_count"] for row in metadata["gamut_clipping"])
+    assert (output / "data/gamut_clipping.csv").is_file()
     report = (output / "report.md").read_text()
     generated_svgs = sorted((output / "figures").glob("*.svg"))
     assert len(generated_svgs) == 18
@@ -41,6 +45,7 @@ def test_comparison_outputs(tmp_path):
     assert (output / "data/pairwise_changes.csv").is_file()
     assert (output / "data/pairwise_changes.json").is_file()
     assert (output / "data/pairwise_coverage.csv").is_file()
+    assert (output / "data/pairwise_coverage.json").is_file()
     assert (output / "figures/minimum_distance_comparison.svg").is_file()
     assert (output / "figures/minimum_change_comparison.svg").is_file()
     assert (output / "tables/comparison.md").is_file()
@@ -79,6 +84,12 @@ def test_comparison_reports_pairwise_regressions(tmp_path):
     )
     assert float(variant_normal["minimum_change_from_baseline"]) < 0
     assert "below_10_fraction_change_from_baseline" in variant_normal
+
+    diagnostics = (output / "tables/pairwise_changes.md").read_text()
+    increase_lines = [line for line in diagnostics.splitlines() if "Largest increase" in line]
+    decrease_lines = [line for line in diagnostics.splitlines() if "Largest decrease" in line]
+    assert all(float(line.split("|")[-2]) > 0 for line in increase_lines)
+    assert all(float(line.split("|")[-2]) < 0 for line in decrease_lines)
 
 
 def test_custom_severity_retains_standard_endpoints(tmp_path):
@@ -132,3 +143,40 @@ def test_scientific_data_and_svg_are_deterministic(tmp_path):
     assert (first / "figures/palette_normal.svg").read_bytes() == (
         second / "figures/palette_normal.svg"
     ).read_bytes()
+
+
+def test_report_refuses_non_empty_output_directory(tmp_path):
+    output = tmp_path / "existing"
+    output.mkdir()
+    marker = output / "keep.txt"
+    marker.write_text("keep")
+    result = analyse_palette(load_palette("palettes/okabe-ito.yaml"))
+    with pytest.raises(ValueError, match="non-empty"):
+        write_report(result, output, formats=("svg",))
+    assert marker.read_text() == "keep"
+
+
+def test_comparison_coverage_is_two_sided_for_added_colour(tmp_path):
+    baseline = load_palette("palettes/okabe-ito.yaml")
+    candidate_path = tmp_path / "expanded.yaml"
+    candidate_path.write_text(
+        Path("palettes/okabe-ito.yaml").read_text().replace("name: Okabe-Ito", "name: Expanded")
+        + "  - {id: white, name: White, hex: '#FFFFFF'}\n"
+    )
+    output = write_comparison(
+        [baseline, load_palette(candidate_path)], tmp_path / "expanded", formats=("svg",)
+    )
+    with (output / "data/pairwise_coverage.csv").open(newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    normal = next(row for row in rows if row["condition"] == "normal")
+    assert float(normal["baseline_coverage_fraction"]) == 1.0
+    assert float(normal["candidate_coverage_fraction"]) < 1.0
+    assert int(normal["candidate_only_pair_count"]) == 8
+
+
+def test_render_options_are_validated(tmp_path):
+    result = analyse_palette(load_palette("palettes/okabe-ito.yaml"))
+    with pytest.raises(ValueError, match="Formats"):
+        write_report(result, tmp_path / "bad-format", formats=("svg", "svg"))
+    with pytest.raises(ValueError, match="DPI"):
+        write_report(result, tmp_path / "bad-dpi", formats=("png",), dpi=0)

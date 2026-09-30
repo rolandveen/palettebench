@@ -30,6 +30,16 @@ def _severities(value: str) -> tuple[int, ...]:
     return result
 
 
+def _positive_int(value: str) -> int:
+    try:
+        result = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("DPI must be a positive integer") from exc
+    if result < 1:
+        raise argparse.ArgumentTypeError("DPI must be a positive integer")
+    return result
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="palettebench", description="Audit scientific categorical colour palettes"
@@ -56,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
         target.add_argument(
             "--severity", type=_severities, default=(20, 40, 60, 80, 100), dest="severities"
         )
-        target.add_argument("--dpi", type=int, default=300)
+        target.add_argument("--dpi", type=_positive_int, default=300)
     return parser
 
 
@@ -106,6 +116,6 @@ def main(argv: list[str] | None = None) -> None:
             palette = load_palette(args.palette)
             destination = args.output or Path("reports") / palette.path.stem
             write_report(analyse_palette(palette, config), destination, args.formats, args.dpi)
-    except (PaletteError, ValueError) as exc:
+    except (PaletteError, TypeError, ValueError) as exc:
         parser.error(str(exc))
     print(f"Wrote report to {destination}")

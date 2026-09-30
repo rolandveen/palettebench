@@ -40,3 +40,14 @@ def test_explicit_duplicate_permission(tmp_path: Path):
         "colors: [{id: a, name: A, hex: '#000000'}, {id: b, name: B, hex: '#000000'}]\n"
     )
     assert len(load_palette(path).colours) == 2
+
+
+@pytest.mark.parametrize("value", ["'false'", "0", "null", "[]"])
+def test_duplicate_permission_requires_yaml_boolean(tmp_path: Path, value: str):
+    path = tmp_path / "duplicates.yaml"
+    path.write_text(
+        f"name: x\nallow_duplicate_colours: {value}\n"
+        "colors: [{id: a, name: A, hex: '#000000'}, {id: b, name: B, hex: '#000000'}]\n"
+    )
+    with pytest.raises(PaletteError, match="must be a boolean"):
+        load_palette(path)

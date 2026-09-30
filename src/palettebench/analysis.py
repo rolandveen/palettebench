@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable
 from dataclasses import dataclass
 from itertools import combinations
@@ -11,10 +12,11 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .colour import contrast_ratio, grayscale_srgb, hex_to_srgb, relative_luminance, srgb_to_lab
-from .cvd import simulate_cvd
+from .cvd import simulate_cvd_raw
 from .palette import Palette
 
 FloatArray = NDArray[np.float64]
+BoolArray = NDArray[np.bool_]
 
 
 @dataclass(frozen=True)
@@ -25,10 +27,28 @@ class AnalysisConfig:
     weakest_count: int = 5
 
     def __post_init__(self) -> None:
+        if not self.severities:
+            raise ValueError("At least one report severity is required")
+        if len(self.severities) != len(set(self.severities)):
+            raise ValueError("Severities must be unique")
         if any(not 0 <= value <= 100 for value in self.severities):
             raise ValueError("Severities must be between 0 and 100")
+        if any(isinstance(value, bool) or not isinstance(value, int) for value in self.severities):
+            raise ValueError("Severities must be integers")
+        if any(not math.isfinite(value) or value < 0 for value in self.thresholds):
+            raise ValueError("Thresholds must be finite and non-negative")
+        if len(self.thresholds) != len(set(self.thresholds)):
+            raise ValueError("Thresholds must be unique")
+        if tuple(sorted(self.thresholds)) != self.thresholds:
+            raise ValueError("Thresholds must be in ascending order")
+        if isinstance(self.curve_step, bool) or not isinstance(self.curve_step, int):
+            raise TypeError("curve_step must be an integer")
         if self.curve_step < 1 or self.curve_step > 100:
             raise ValueError("curve_step must be between 1 and 100")
+        if isinstance(self.weakest_count, bool) or not isinstance(self.weakest_count, int):
+            raise TypeError("weakest_count must be an integer")
+        if self.weakest_count < 1:
+            raise ValueError("weakest_count must be at least 1")
 
 
 @dataclass(frozen=True)
@@ -38,6 +58,8 @@ class ConditionResult:
     severity: int
     label: str
     srgb: FloatArray
+    raw_srgb: FloatArray
+    clipped_channels: BoolArray
     lab: FloatArray
     delta_e: FloatArray
     delta_l: FloatArray
@@ -121,10 +143,20 @@ def _pairwise(lab: FloatArray) -> tuple[FloatArray, FloatArray]:
     return delta_e, delta_l
 
 
-def _condition(key: str, kind: str, severity: int, label: str, rgb: FloatArray) -> ConditionResult:
+def _condition(
+    key: str, kind: str, severity: int, label: str, raw_rgb: FloatArray
+) -> ConditionResult:
+    """Build metrics from displayable RGB while retaining pre-clipping provenance."""
+    raw_rgb = np.asarray(raw_rgb, dtype=float)
+    clipped_channels = (raw_rgb < 0.0) | (raw_rgb > 1.0)
+    # ΔE00 describes the colours that can actually be rendered; raw values are
+    # retained separately so the scientific effect of gamut clipping is auditable.
+    rgb = np.clip(raw_rgb, 0.0, 1.0)
     lab = srgb_to_lab(rgb)
     delta_e, delta_l = _pairwise(lab)
-    return ConditionResult(key, kind, severity, label, rgb, lab, delta_e, delta_l)
+    return ConditionResult(
+        key, kind, severity, label, rgb, raw_rgb, clipped_channels, lab, delta_e, delta_l
+    )
 
 
 def _iter_pairs(palette: Palette, condition: ConditionResult) -> Iterable[PairResult]:
@@ -150,6 +182,7 @@ def _iter_pairs(palette: Palette, condition: ConditionResult) -> Iterable[PairRe
 def _summarise(
     condition: ConditionResult, pairs: tuple[PairResult, ...], thresholds: tuple[float, ...]
 ) -> SummaryResult:
+    """Summarise the complete pair population using documented descriptive conventions."""
     values = np.array([pair.delta_e_00 for pair in pairs], dtype=float)
     weakest = pairs[int(np.argmin(values))]
     within = [pair.delta_e_00 for pair in pairs if pair.relationship == "within"]
@@ -163,8 +196,11 @@ def _summarise(
         float(values.max()),
         float(values.mean()),
         float(np.median(values)),
+        # Every unique pair is enumerated, so this is population rather than sample SD.
         float(values.std(ddof=0)),
+        # NumPy's default linear interpolation is part of the recorded output contract.
         float(np.percentile(values, 10)),
+        # Threshold equality is not counted: all threshold fields consistently mean "below".
         {threshold: int(np.count_nonzero(values < threshold)) for threshold in thresholds},
         {
             threshold: float(np.count_nonzero(values < threshold) / len(values))
@@ -188,8 +224,8 @@ def analyse_palette(palette: Palette, config: AnalysisConfig | None = None) -> A
             entry.name,
             entry.hex,
             entry.group,
-            tuple(float(x) for x in rgb[index]),
-            tuple(float(x) for x in lab[index]),
+            (float(rgb[index, 0]), float(rgb[index, 1]), float(rgb[index, 2])),
+            (float(lab[index, 0]), float(lab[index, 1]), float(lab[index, 2])),
             float(np.hypot(lab[index, 1], lab[index, 2])),
             float(luminance[index]),
             float(contrast_ratio(luminance[index], 1.0)),
@@ -199,6 +235,8 @@ def analyse_palette(palette: Palette, config: AnalysisConfig | None = None) -> A
     )
 
     conditions = [_condition("normal", "normal", 0, "Normal", rgb)]
+    # Endpoint figures and cross-palette comparisons require 100%, even when a
+    # caller requests only intermediate progression severities.
     report_severities = tuple(dict.fromkeys((*config.severities, 100)))
     for kind in ("protan", "deutan"):
         for severity in report_severities:
@@ -208,11 +246,13 @@ def analyse_palette(palette: Palette, config: AnalysisConfig | None = None) -> A
                     kind,
                     severity,
                     f"{kind.title()} {severity}%",
-                    simulate_cvd(rgb, kind, severity),
+                    simulate_cvd_raw(rgb, kind, severity),
                 )
             )
+    # Tritan remains an endpoint-only standard condition because partial
+    # severity interpolation has a less direct evidential interpretation.
     conditions.append(
-        _condition("tritan100", "tritan", 100, "Tritan 100%", simulate_cvd(rgb, "tritan", 100))
+        _condition("tritan100", "tritan", 100, "Tritan 100%", simulate_cvd_raw(rgb, "tritan", 100))
     )
     conditions.append(_condition("grayscale", "grayscale", 0, "Grayscale", grayscale_srgb(rgb)))
 
@@ -230,7 +270,7 @@ def analyse_palette(palette: Palette, config: AnalysisConfig | None = None) -> A
     for kind in ("protan", "deutan"):
         for severity in severities:
             curve_condition = _condition(
-                "curve", kind, severity, "", simulate_cvd(rgb, kind, severity)
+                "curve", kind, severity, "", simulate_cvd_raw(rgb, kind, severity)
             )
             curve_pairs = tuple(_iter_pairs(palette, curve_condition))
             summary = _summarise(curve_condition, curve_pairs, ())

@@ -64,6 +64,8 @@ palettebench palettes/okabe-ito.yaml
 
 The report is written to `reports/okabe-ito/`. Open `report.md` in a Markdown viewer or repository browser. The report directory also contains exact input, data, tables, figures, and provenance.
 
+PaletteBench refuses to write into a non-empty output directory. Choose a fresh directory or deliberately archive/remove an earlier generated report first; this prevents files from separate runs or format selections from being mixed.
+
 The repository includes a [complete generated baseline audit](../examples/okabe-ito-report/report.md) showing the expected directory and every default artifact.
 
 Equivalent module invocation:
@@ -167,7 +169,7 @@ palettebench compare --okabe-ito-baseline palettes/variant-a.yaml \
   --output reports/comparison
 ```
 
-The comparison report contains condition-level minimum, 10th percentile, mean, median, maximum, standard deviation, weakest pair, threshold-count changes, and changes from baseline. It also includes aligned palette strips, severity curves, a minimum-distance change chart, and the largest pair-level increases and decreases for colours with matching IDs. `data/pairwise_coverage.csv` makes incomplete ID matching explicit. Full-precision CSV/JSON, Markdown/LaTeX tables, copied inputs, and metadata are retained.
+The comparison report contains condition-level minimum, 10th percentile, mean, median, maximum, standard deviation, weakest pair, threshold-count changes, and changes from baseline. It also includes aligned palette strips, severity curves, a minimum-distance change chart, and the largest genuinely positive and negative pair-level changes for colours with matching IDs. `data/pairwise_coverage.csv` and its JSON counterpart report coverage relative to both palettes and make incomplete ID matching explicit. Full-precision CSV/JSON, Markdown/LaTeX tables, copied inputs, and metadata are retained.
 
 Comparison does not calculate a single accessibility score. Review changes condition by condition and in relation to the palette's category semantics.
 
@@ -183,6 +185,7 @@ metadata.json             versions, hashes, configuration, and timestamp
 inputs/                   exact copy of the analysed YAML
 data/colours.csv          normal-vision colour characteristics
 data/conditions.csv       simulated conditions
+data/gamut_clipping.csv   affected colours and raw/clipped simulated RGB
 data/pairwise.csv         canonical tidy pairwise result
 data/pairwise.json        JSON representation of pairwise results
 data/summary.csv          condition summaries and threshold counts/fractions
@@ -192,7 +195,7 @@ tables/                   Markdown and booktabs LaTeX fragments
 figures/                  requested publication and preview formats
 ```
 
-Use `data/pairwise.csv` for independent statistical analysis. It has one row per unique colour pair and condition. Use `metadata.json` to verify the exact input SHA-256, software versions, and configuration.
+Use `data/pairwise.csv` for independent statistical analysis. It has one row per unique colour pair and condition. Use `metadata.json` to verify the exact input SHA-256, software versions, configuration, and condition-level clipping summary. `data/gamut_clipping.csv` gives per-colour clipping details.
 
 ## 7. Reading the figures
 
@@ -206,7 +209,7 @@ Use `data/pairwise.csv` for independent statistical analysis. It has one row per
 
 ## 8. Interpreting results
 
-ΔE00 is evidence about modelled perceptual difference, not an accessibility verdict. Counts below 5, 10, 15, and 20 are descriptive and include both counts and fractions. They support comparison and prioritisation without defining a universal threshold.
+ΔE00 is evidence about modelled perceptual difference, not an accessibility verdict. Counts below 5, 10, 15, and 20 are descriptive and include both counts and fractions. They support comparison and prioritisation without defining a universal threshold. Summary SD is the population SD over all enumerated pairs (`ddof=0`); the 10th percentile uses NumPy's linear interpolation convention. Pairwise values share colours and must not be treated as statistically independent observations.
 
 Simulated CVD is not a substitute for evaluation with people who have CVD. Viewing environment, display calibration, print process, mark size, spatial context, ageing, acuity, and individual variation matter. Critical information should also use shape, texture, line style, position, or direct labels.
 
@@ -228,7 +231,8 @@ The source YAML and machine-readable data remain sufficient to regenerate presen
 ```bash
 ruff check .
 ruff format --check .
-pytest
+mypy
+pytest --cov --cov-report=term-missing
 python -m build
 ```
 

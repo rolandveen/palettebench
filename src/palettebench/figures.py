@@ -43,6 +43,9 @@ def _condition(result: AnalysisResult, key: str) -> ConditionResult:
 
 
 def _text_colour(rgb: np.ndarray) -> str:
+    """Choose a legible label colour using a lightweight display-RGB heuristic."""
+    # This cutoff is a figure-label heuristic, not a WCAG contrast assessment;
+    # authoritative contrast ratios are calculated from linear luminance elsewhere.
     return "black" if float(rgb @ np.array([0.2126, 0.7152, 0.0722])) > 0.52 else "white"
 
 
@@ -138,13 +141,18 @@ def heatmap(result: AnalysisResult, condition: ConditionResult, vmax: float) -> 
 
 
 def pair_matrix(result: AnalysisResult, condition: ConditionResult, vmax: float) -> plt.Figure:
+    """Render direct colour contacts below the diagonal and ΔE00 above it."""
     n = len(result.colours)
     fig, ax = plt.subplots(figsize=(max(7, n * 0.85), max(6, n * 0.8)))
     cmap, norm = plt.get_cmap("viridis"), Normalize(0, vmax)
     for row in range(n):
         for column in range(n):
+            # Matplotlib patch coordinates rise from the bottom, so reverse the
+            # row coordinate to keep labels in the palette's top-to-bottom order.
             x, y = column, n - row - 1
             if row > column:
+                # Two complementary triangles share a full diagonal edge, making
+                # weak colour separation visible without an intervening border.
                 ax.add_patch(
                     Polygon(
                         [(x, y), (x + 1, y), (x, y + 1)],

@@ -69,7 +69,9 @@ def load_palette(path: str | Path) -> Palette:
     ids = [colour.id for colour in colours]
     if len(ids) != len(set(ids)):
         raise PaletteError("Colour IDs must be unique")
-    allow_duplicates = bool(raw.get("allow_duplicate_colours", False))
+    allow_duplicates = raw.get("allow_duplicate_colours", False)
+    if not isinstance(allow_duplicates, bool):
+        raise PaletteError("Palette 'allow_duplicate_colours' must be a boolean")
     values = [colour.hex for colour in colours]
     if not allow_duplicates and len(values) != len(set(values)):
         raise PaletteError("Colour values must be unique unless allow_duplicate_colours is true")

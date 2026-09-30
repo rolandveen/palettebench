@@ -61,6 +61,8 @@ palettebench palettes/okabe-ito.yaml \
 
 The generated `report.md` links every key figure and table. `data/pairwise.csv` is the canonical long-form result, and `metadata.json` records the input SHA-256, versions, timestamp, and analysis configuration.
 
+Output directories must be empty or absent. This prevents stale artifacts from different runs from being mixed.
+
 ## Create and compare a variant
 
 ```bash
@@ -77,7 +79,7 @@ palettebench compare --okabe-ito-baseline my-palette.yaml \
   --output reports/comparison
 ```
 
-The first palette is the baseline. Comparisons report the minimum, lower tail, mean, median, threshold counts, weakest pairs, and largest matched-pair increases and decreases under each condition. They also retain aligned strips, severity curves, a minimum-change chart, matching coverage, and full-precision data. Results are not collapsed into one accessibility score.
+The first palette is the baseline. Comparisons report the minimum, lower tail, mean, median, threshold counts, weakest pairs, and genuinely positive and negative matched-pair changes under each condition. They also retain aligned strips, severity curves, a minimum-change chart, two-sided matching coverage, and full-precision data. Results are not collapsed into one accessibility score.
 
 Colours may optionally declare a `group`. PaletteBench labels each pair as within-group, between-group, or ungrouped and reports group minima without inventing a universal hierarchy score.
 

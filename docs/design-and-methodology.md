@@ -78,7 +78,7 @@ six-digit HEX
 
 PaletteBench uses Colorspacious's `sRGB1+CVD` transform, based on Machado, Oliveira, and Fernandes, for colour-vision-deficiency simulation. It uses Colour Science for Python for the sRGB/XYZ/Lab transformation and CIEDE2000 calculation. Transformations are centralised in `colour.py` and `cvd.py` so that assumptions remain independently testable and replaceable.
 
-Display-bound clipping is recorded in generated metadata because out-of-gamut handling affects subsequent measurements. Input RGB channels are normalised to `[0, 1]`; exported RGB columns remain unambiguous about their representation.
+Display-bound clipping is recorded in generated metadata and `data/gamut_clipping.csv` because out-of-gamut handling affects subsequent measurements. The latter identifies every affected colour and preserves its raw simulated and clipped display RGB values. Input RGB channels are normalised to `[0, 1]`; exported RGB columns remain unambiguous about their representation.
 
 Grayscale is derived from WCAG relative luminance and re-encoded to neutral sRGB. This makes grayscale a useful robustness analysis, but not a categorical-palette requirement.
 
@@ -91,8 +91,8 @@ CIEDE2000 (ΔE00) is the primary perceptual-distance metric. For an `N`-colour p
 Each condition records:
 
 - minimum ΔE00 and the pair producing it;
-- maximum, mean, median, and population standard deviation;
-- the 10th percentile;
+- maximum, mean, median, and population standard deviation (`ddof=0`);
+- the 10th percentile, using NumPy's linear interpolation convention;
 - the number and fraction of pairs below configured descriptive thresholds;
 - the complete pairwise matrix;
 - absolute pairwise L* differences.
@@ -136,6 +136,7 @@ report/
 ├── data/
 │   ├── colours.csv
 │   ├── conditions.csv
+│   ├── gamut_clipping.csv
 │   ├── pairwise.csv
 │   ├── pairwise.json
 │   ├── severity_curves.csv
@@ -191,7 +192,7 @@ It reports, by palette and condition:
 - absolute and signed changes from the baseline;
 - changes in counts and fractions below each descriptive threshold;
 - the largest pair-level increases and decreases when colour IDs match;
-- pair-matching coverage, so comparisons with added, removed, or renamed colours are not silently treated as complete;
+- pair-matching coverage relative to both the baseline and candidate, plus intersection-over-union coverage, so comparisons with added, removed, or renamed colours are not silently treated as complete;
 - side-by-side normal, simulated CVD, and grayscale strips;
 - overlaid minimum-distance-versus-severity curves and a minimum-change chart.
 

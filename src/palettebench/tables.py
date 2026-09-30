@@ -140,7 +140,7 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
             )
 
     with (data_dir / "colours.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(
             [
                 "id",
@@ -189,9 +189,9 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
     ]
     pair_dicts = [{field: getattr(pair, field) for field in pair_fields} for pair in result.pairs]
     with (data_dir / "pairwise.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=pair_fields)
-        writer.writeheader()
-        writer.writerows(pair_dicts)
+        pair_writer = csv.DictWriter(handle, fieldnames=pair_fields, lineterminator="\n")
+        pair_writer.writeheader()
+        pair_writer.writerows(pair_dicts)
     (data_dir / "pairwise.json").write_text(
         json.dumps(pair_dicts, indent=2) + "\n", encoding="utf-8"
     )
@@ -216,20 +216,20 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
             for threshold in result.config.thresholds
             for field in (f"below_{threshold:g}_count", f"below_{threshold:g}_fraction")
         ]
-        writer = csv.DictWriter(handle, fieldnames=fields)
-        writer.writeheader()
+        summary_writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
+        summary_writer.writeheader()
         for s in result.summaries:
             row = {field: getattr(s, field) for field in fields if hasattr(s, field)}
             row["minimum_pair"] = "/".join(s.minimum_pair)
             for threshold in result.config.thresholds:
                 row[f"below_{threshold:g}_count"] = s.below[threshold]
                 row[f"below_{threshold:g}_fraction"] = s.below_fraction[threshold]
-            writer.writerow(row)
+            summary_writer.writerow(row)
 
     relationships = ("within", "between", "ungrouped")
     grouped_table_rows: list[list[object]] = []
     with (data_dir / "group_summary.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(
             [
                 "condition",
@@ -301,12 +301,77 @@ def write_tables(result: AnalysisResult, output: Path) -> None:
         )
 
     with (data_dir / "conditions.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(["condition", "kind", "severity", "label"])
-        writer.writerows((c.key, c.kind, c.severity, c.label) for c in result.conditions)
+        writer = csv.writer(handle, lineterminator="\n")
+        writer.writerow(
+            [
+                "condition",
+                "kind",
+                "severity",
+                "label",
+                "clipped_colour_count",
+                "clipped_channel_count",
+                "raw_srgb_min",
+                "raw_srgb_max",
+            ]
+        )
+        writer.writerows(
+            (
+                c.key,
+                c.kind,
+                c.severity,
+                c.label,
+                np.count_nonzero(c.clipped_channels.any(axis=1)),
+                np.count_nonzero(c.clipped_channels),
+                c.raw_srgb.min(),
+                c.raw_srgb.max(),
+            )
+            for c in result.conditions
+        )
+
+    with (data_dir / "gamut_clipping.csv").open("w", newline="", encoding="utf-8") as handle:
+        # This is an exception table: header-only output means that no colour in
+        # any reported condition required display-gamut clipping.
+        writer = csv.writer(handle, lineterminator="\n")
+        writer.writerow(
+            [
+                "condition",
+                "kind",
+                "severity",
+                "colour_id",
+                "raw_srgb_r",
+                "raw_srgb_g",
+                "raw_srgb_b",
+                "display_srgb_r",
+                "display_srgb_g",
+                "display_srgb_b",
+                "clipped_r",
+                "clipped_g",
+                "clipped_b",
+            ]
+        )
+        for condition in result.conditions:
+            for colour, raw, display, clipped in zip(
+                result.palette.colours,
+                condition.raw_srgb,
+                condition.srgb,
+                condition.clipped_channels,
+                strict=True,
+            ):
+                if clipped.any():
+                    writer.writerow(
+                        [
+                            condition.key,
+                            condition.kind,
+                            condition.severity,
+                            colour.id,
+                            *raw,
+                            *display,
+                            *(bool(value) for value in clipped),
+                        ]
+                    )
 
     with (data_dir / "severity_curves.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["kind", "severity", "minimum", "mean", "median", "minimum_pair"])
         writer.writerows(
             (c.kind, c.severity, c.minimum, c.mean, c.median, "/".join(c.minimum_pair))
