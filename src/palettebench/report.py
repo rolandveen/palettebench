@@ -140,6 +140,30 @@ The simulated severity percentages are model parameters, not clinical measuremen
 
 ![CVD overview](figures/cvd_overview.{preview})
 
+## Simulated CVD palette strips
+
+### Protan 100%
+
+![Protan 100% palette](figures/palette_protan100.{preview})
+
+### Deutan 100%
+
+![Deutan 100% palette](figures/palette_deutan100.{preview})
+
+### Tritan 100%
+
+![Tritan 100% palette](figures/palette_tritan100.{preview})
+
+## Severity progressions
+
+### Protan progression
+
+![Protan severity progression](figures/severity_protan.{preview})
+
+### Deutan progression
+
+![Deutan severity progression](figures/severity_deutan.{preview})
+
 ## Summary statistics
 
 {(destination / "tables" / "summary.md").read_text(encoding="utf-8")}
@@ -152,10 +176,42 @@ Counts below the descriptive thresholds {threshold_text} are available in `data/
 
 The lower half of each pair matrix places two colours in direct diagonal contact; the upper half gives their ΔE00 value.
 
-- [Normal pair matrix](figures/pairs_normal.{preview})
-- [Protan 100% pair matrix](figures/pairs_protan100.{preview})
-- [Deutan 100% pair matrix](figures/pairs_deutan100.{preview})
-- [Tritan 100% pair matrix](figures/pairs_tritan100.{preview})
+### Pairwise ΔE00 heatmaps
+
+#### Normal
+
+![Normal pairwise heatmap](figures/heatmap_normal.{preview})
+
+#### Protan 100%
+
+![Protan 100% pairwise heatmap](figures/heatmap_protan100.{preview})
+
+#### Deutan 100%
+
+![Deutan 100% pairwise heatmap](figures/heatmap_deutan100.{preview})
+
+#### Tritan 100%
+
+![Tritan 100% pairwise heatmap](figures/heatmap_tritan100.{preview})
+
+### Diagonal split pair matrices
+
+#### Normal
+
+![Normal pair matrix](figures/pairs_normal.{preview})
+
+#### Protan 100%
+
+![Protan 100% pair matrix](figures/pairs_protan100.{preview})
+
+#### Deutan 100%
+
+![Deutan 100% pair matrix](figures/pairs_deutan100.{preview})
+
+#### Tritan 100%
+
+![Tritan 100% pair matrix](figures/pairs_tritan100.{preview})
+
 - [All pairwise data](data/pairwise.csv)
 
 {grouped_section}## Weakest pairs and severity progression

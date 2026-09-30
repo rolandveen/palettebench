@@ -26,6 +26,10 @@ def test_standard_outputs(tmp_path):
     assert len(metadata["input_sha256"]) == 64
     assert metadata["input_palette"] == "okabe-ito.yaml"
     assert not Path(metadata["input_palette"]).is_absolute()
+    report = (output / "report.md").read_text()
+    generated_svgs = sorted((output / "figures").glob("*.svg"))
+    assert len(generated_svgs) == 18
+    assert all(f"figures/{figure.name}" in report for figure in generated_svgs)
 
 
 def test_comparison_outputs(tmp_path):

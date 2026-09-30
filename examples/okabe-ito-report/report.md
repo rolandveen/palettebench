@@ -21,6 +21,30 @@ The simulated severity percentages are model parameters, not clinical measuremen
 
 ![CVD overview](figures/cvd_overview.svg)
 
+## Simulated CVD palette strips
+
+### Protan 100%
+
+![Protan 100% palette](figures/palette_protan100.svg)
+
+### Deutan 100%
+
+![Deutan 100% palette](figures/palette_deutan100.svg)
+
+### Tritan 100%
+
+![Tritan 100% palette](figures/palette_tritan100.svg)
+
+## Severity progressions
+
+### Protan progression
+
+![Protan severity progression](figures/severity_protan.svg)
+
+### Deutan progression
+
+![Deutan severity progression](figures/severity_deutan.svg)
+
 ## Summary statistics
 
 | Condition | Severity | Minimum ΔE00 | Pair | Maximum | Mean | Median | SD | 10th percentile |
@@ -58,10 +82,42 @@ Counts below the descriptive thresholds ΔE00 < 5, ΔE00 < 10, ΔE00 < 15, ΔE00
 
 The lower half of each pair matrix places two colours in direct diagonal contact; the upper half gives their ΔE00 value.
 
-- [Normal pair matrix](figures/pairs_normal.svg)
-- [Protan 100% pair matrix](figures/pairs_protan100.svg)
-- [Deutan 100% pair matrix](figures/pairs_deutan100.svg)
-- [Tritan 100% pair matrix](figures/pairs_tritan100.svg)
+### Pairwise ΔE00 heatmaps
+
+#### Normal
+
+![Normal pairwise heatmap](figures/heatmap_normal.svg)
+
+#### Protan 100%
+
+![Protan 100% pairwise heatmap](figures/heatmap_protan100.svg)
+
+#### Deutan 100%
+
+![Deutan 100% pairwise heatmap](figures/heatmap_deutan100.svg)
+
+#### Tritan 100%
+
+![Tritan 100% pairwise heatmap](figures/heatmap_tritan100.svg)
+
+### Diagonal split pair matrices
+
+#### Normal
+
+![Normal pair matrix](figures/pairs_normal.svg)
+
+#### Protan 100%
+
+![Protan 100% pair matrix](figures/pairs_protan100.svg)
+
+#### Deutan 100%
+
+![Deutan 100% pair matrix](figures/pairs_deutan100.svg)
+
+#### Tritan 100%
+
+![Tritan 100% pair matrix](figures/pairs_tritan100.svg)
+
 - [All pairwise data](data/pairwise.csv)
 
 ## Weakest pairs and severity progression

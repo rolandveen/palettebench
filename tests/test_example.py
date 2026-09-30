@@ -15,6 +15,11 @@ def test_committed_example_is_complete_and_self_consistent():
     assert links
     assert all((root / target).is_file() for target in links)
 
+    report = (root / "report.md").read_text()
+    generated_svgs = sorted((root / "figures").glob("*.svg"))
+    assert len(generated_svgs) == 18
+    assert all(f"figures/{figure.name}" in report for figure in generated_svgs)
+
     for stem in ("palette_normal", "cvd_overview", "pairs_normal", "weakest_pairs"):
         for extension in ("svg", "pdf", "png"):
             assert (root / "figures" / f"{stem}.{extension}").is_file()
