@@ -126,6 +126,16 @@ BibTeX:
 
 The badge at the top of this README uses the concept DOI, which resolves to the latest archived release. For reproducible citation, use the version DOI above.
 
+## Responsible use of AI
+
+This repository is the product of human-led research and development. The **conceptualisation, research objectives, scientific contributions, methodological choices, experimental design, interpretation of results, and conclusions** are determined by the human authors, who retain full intellectual and scientific responsibility for the work.
+
+Generative artificial intelligence (AI) tools, such as ChatGPT and Codex, may be employed as **assistants** in software development and documentation. Their contributions may include implementing human-defined designs, suggesting or refactoring code, debugging, developing tests, improving documentation, exploring technical alternatives, and providing critical feedback. AI-generated suggestions are provisional and subject to human review, modification, and appropriate verification before adoption.
+
+**AI assistance does not constitute scientific authorship or transfer responsibility.** The human authors remain accountable for the correctness, originality, scientific integrity, reproducibility, attribution, licensing, and maintenance of the work. AI-generated outputs are not regarded as independent scientific evidence, and AI systems are not credited as authors or co-authors.
+
+When AI tools are used as part of the scientific methodology itself, rather than merely as development assistants, we document their role separately, as appropriate, to ensure transparency and reproducibility.
+
 ## References
 
 - Okabe, M. & Ito, K. *Color Universal Design (CUD): How to make figures and presentations that are friendly to Colorblind people*. https://jfly.uni-koeln.de/color/
@@ -137,6 +147,6 @@ The badge at the top of this README uses the concept DOI, which resolves to the 
 
 ## Scientific limitations
 
-Simulation does not reproduce any particular individual's perception. Monitor calibration, viewing environment, visual acuity, ageing, print reproduction, mark size, and surrounding colours affect discriminability. Use redundant encodings—shape, line style, labels, or texture—when colour carries critical meaning.
+Simulation does not reproduce any particular individual's perception. Monitor calibration, viewing environment, visual acuity, ageing, print reproduction, mark size, and surrounding colours affect discriminability. Use redundant encodings - e.g., shape, line style, labels, or texture - when colour carries critical meaning.
 
 PaletteBench is available under the BSD 3-Clause License.
